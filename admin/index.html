@@ -9571,6 +9571,61 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                     font-family: var(--mono);
                 }
 
+                .copy-address-btn {
+                    display: inline;
+                    padding: 0;
+                    border: 0;
+                    background: transparent;
+                    color: var(--blue);
+                    cursor: pointer;
+                    font: inherit;
+                    text-align: left;
+                    overflow-wrap: anywhere;
+                }
+
+                .copy-address-btn:hover,
+                .copy-address-btn:focus {
+                    color: var(--blue-dark);
+                    text-decoration: underline;
+                }
+
+                .copy-address-tip {
+                    position: fixed;
+                    z-index: 60;
+                    max-width: min(240px, calc(100vw - 24px));
+                    padding: 7px 10px;
+                    border: 1px solid #b9e8d3;
+                    border-radius: var(--radius);
+                    background: var(--green);
+                    box-shadow: 0 12px 28px rgba(15, 159, 110, 0.22);
+                    color: #ffffff;
+                    font-size: 12px;
+                    font-weight: 760;
+                    line-height: 1.35;
+                    pointer-events: none;
+                    transform: translate(-50%, -100%) translateY(-8px);
+                    animation: copyAddressTip 1.45s ease forwards;
+                    white-space: nowrap;
+                }
+
+                @keyframes copyAddressTip {
+                    0% {
+                        opacity: 0;
+                        transform: translate(-50%, -100%) translateY(0);
+                    }
+
+                    15%,
+                    78% {
+                        opacity: 1;
+                        transform: translate(-50%, -100%) translateY(-8px);
+                    }
+
+                    100% {
+                        opacity: 0;
+                        transform: translate(-50%, -100%) translateY(-14px);
+                    }
+                }
+
                 .country-cell {
                     display: inline-flex;
                     align-items: center;
@@ -9886,6 +9941,21 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
 
                 html.dark-mode .link-btn {
                     color: #93c5fd;
+                }
+
+                html.dark-mode .copy-address-btn {
+                    color: #93c5fd;
+                }
+
+                html.dark-mode .copy-address-btn:hover,
+                html.dark-mode .copy-address-btn:focus {
+                    color: #bfdbfe;
+                }
+
+                html.dark-mode .copy-address-tip {
+                    border-color: rgba(52, 211, 153, 0.38);
+                    background: #047857;
+                    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.36);
                 }
 
                 html.dark-mode .link-btn:hover:not(:disabled) {
@@ -10333,6 +10403,13 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                         startAllSpeedTests();
                     });
                     els.resultBody.addEventListener("click", (event) => {
+                        const copyAddressBtn = event.target.closest("[data-copy-address]");
+                        if (copyAddressBtn) {
+                            event.stopPropagation();
+                            copyResultAddress(copyAddressBtn.dataset.copyAddress || "", copyAddressBtn);
+                            return;
+                        }
+
                         const checkbox = event.target.closest("[data-select-id]");
                         if (checkbox) {
                             setResultSelected(checkbox.dataset.selectId, checkbox.checked);
@@ -11038,9 +11115,10 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                     els.resultBody.innerHTML = getSortedResults().map(({ item, index }) => {
                         const id = String(item.id);
                         const selected = state.selectedIds.has(id);
+                        const safeAddress = escapeHtml(item.address);
                         return `<tr class="result-row${selected ? " is-selected" : ""}" data-result-id="${escapeHtml(id)}">
-          <td class="selection-cell"><input type="checkbox" data-select-id="${escapeHtml(id)}" aria-label="选择 ${escapeHtml(item.address)}" ${selected ? "checked" : ""}></td>
-          <td class="ip-cell">${escapeHtml(item.address)}</td>
+          <td class="selection-cell"><input type="checkbox" data-select-id="${escapeHtml(id)}" aria-label="选择 ${safeAddress}" ${selected ? "checked" : ""}></td>
+          <td class="ip-cell"><button class="copy-address-btn" type="button" data-copy-address="${safeAddress}" title="点击复制" aria-label="复制 ${safeAddress}">${safeAddress}</button></td>
           <td>${escapeHtml(item.ipType || "未知")}</td>
           <td>${escapeHtml(item.type)}</td>
           <td>${renderCountryCell(item.country)}</td>
@@ -11156,11 +11234,53 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
 
                 async function copySelectedResults(lines) {
                     try {
-                        await navigator.clipboard.writeText(lines.join("\n"));
+                        await writeClipboardText(lines.join("\n"));
                         els.selectionStatus.textContent = `已复制 ${lines.length} 个`;
                     } catch (error) {
                         els.selectionStatus.textContent = "保存失败";
                     }
+                }
+
+                async function copyResultAddress(address, anchor) {
+                    if (!address) return;
+                    try {
+                        await writeClipboardText(address);
+                        showCopyAddressTip(anchor, "已复制到粘贴板");
+                    } catch (error) {
+                        showCopyAddressTip(anchor, "复制失败");
+                    }
+                }
+
+                async function writeClipboardText(text) {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(text);
+                        return;
+                    }
+
+                    const textarea = document.createElement("textarea");
+                    textarea.value = text;
+                    textarea.setAttribute("readonly", "");
+                    textarea.style.position = "fixed";
+                    textarea.style.left = "-9999px";
+                    textarea.style.top = "0";
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    const copied = document.execCommand("copy");
+                    textarea.remove();
+                    if (!copied) throw new Error("copy failed");
+                }
+
+                function showCopyAddressTip(anchor, message) {
+                    if (!anchor) return;
+                    document.querySelectorAll(".copy-address-tip").forEach((tip) => tip.remove());
+                    const rect = anchor.getBoundingClientRect();
+                    const tip = document.createElement("div");
+                    tip.className = "copy-address-tip";
+                    tip.textContent = message;
+                    tip.style.left = `${rect.left + rect.width / 2}px`;
+                    tip.style.top = `${rect.top}px`;
+                    document.body.appendChild(tip);
+                    window.setTimeout(() => tip.remove(), 1500);
                 }
 
                 function closeBestCFModule() {
