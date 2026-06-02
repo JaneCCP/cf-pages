@@ -9482,7 +9482,7 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
 
                 table {
                     width: 100%;
-                    min-width: 760px;
+                    min-width: 860px;
                     border-collapse: collapse;
                     table-layout: fixed;
                 }
@@ -10203,22 +10203,25 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                                         <tr>
                                             <th class="selection-cell"><input id="selectAllHeader" type="checkbox"
                                                     title="全选" aria-label="全选"></th>
-                                            <th style="width: 27%"><button class="sort-header" type="button"
+                                            <th style="width: 24%"><button class="sort-header" type="button"
                                                     data-sort="address">优选IP <span class="sort-mark"
                                                         data-sort-mark="address"></span></button></th>
-                                            <th style="width: 12%"><button class="sort-header" type="button"
+                                            <th style="width: 11%"><button class="sort-header" type="button"
                                                     data-sort="ipType">IP类型 <span class="sort-mark"
                                                         data-sort-mark="ipType"></span></button></th>
-                                            <th style="width: 15%"><button class="sort-header" type="button"
+                                            <th style="width: 14%"><button class="sort-header" type="button"
                                                     data-sort="type">优选类型 <span class="sort-mark"
                                                         data-sort-mark="type"></span></button></th>
-                                            <th style="width: 14%"><button class="sort-header" type="button"
+                                            <th style="width: 13%"><button class="sort-header" type="button"
                                                     data-sort="country">国家/地区 <span class="sort-mark"
                                                         data-sort-mark="country"></span></button></th>
-                                            <th style="width: 14%"><button class="sort-header" type="button"
+                                            <th style="width: 10%"><button class="sort-header" type="button"
+                                                    data-sort="colo">数据中心 <span class="sort-mark"
+                                                        data-sort-mark="colo"></span></button></th>
+                                            <th style="width: 13%"><button class="sort-header" type="button"
                                                     data-sort="latency">延迟(ms) <span class="sort-mark"
                                                         data-sort-mark="latency"></span></button></th>
-                                            <th style="width: 18%"><button class="sort-header" type="button"
+                                            <th style="width: 15%"><button class="sort-header" type="button"
                                                     data-sort="speed">速度(Mbps) <span class="sort-mark"
                                                         data-sort-mark="speed"></span></button></th>
                                         </tr>
@@ -11106,7 +11109,7 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                     renderSortMarks();
                     syncSelectionWithResults();
                     if (!state.results.length) {
-                        els.resultBody.innerHTML = '<tr><td class="empty" colspan="7">暂无结果</td></tr>';
+                        els.resultBody.innerHTML = '<tr><td class="empty" colspan="8">暂无结果</td></tr>';
                         updateSelectionState();
                         updateActionAvailability();
                         return;
@@ -11122,6 +11125,7 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
           <td>${escapeHtml(item.ipType || "未知")}</td>
           <td>${escapeHtml(item.type)}</td>
           <td>${renderCountryCell(item.country)}</td>
+          <td>${escapeHtml(item.colo || "未知")}</td>
           <td>${item.latency}ms</td>
           <td>${renderSpeedCell(item, index)}</td>
         </tr>`;
