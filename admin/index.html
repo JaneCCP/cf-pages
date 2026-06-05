@@ -9737,6 +9737,32 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                     white-space: nowrap;
                 }
 
+                .optimize-toast {
+                    position: fixed;
+                    top: 18px;
+                    right: 18px;
+                    z-index: 80;
+                    width: min(360px, calc(100vw - 36px));
+                    padding: 12px 14px;
+                    border: 1px solid #fecaca;
+                    border-radius: var(--radius);
+                    background: #fff5f5;
+                    box-shadow: 0 18px 40px rgba(127, 29, 29, 0.16);
+                    color: #7f1d1d;
+                    font-size: 13px;
+                    font-weight: 720;
+                    line-height: 1.55;
+                    opacity: 0;
+                    pointer-events: none;
+                    transform: translate3d(0, -8px, 0);
+                    transition: opacity 0.18s ease, transform 0.18s ease;
+                }
+
+                .optimize-toast.is-visible {
+                    opacity: 1;
+                    transform: translate3d(0, 0, 0);
+                }
+
                 @keyframes copyAddressTip {
                     0% {
                         opacity: 0;
@@ -10134,6 +10160,13 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
 
                 html.dark-mode .textarea-wrap textarea {
                     background: transparent;
+                }
+
+                html.dark-mode .optimize-toast {
+                    border-color: rgba(248, 113, 113, 0.38);
+                    background: #2a1216;
+                    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.34);
+                    color: #fecaca;
                 }
 
                 html.dark-mode .tag.ok {
@@ -10614,6 +10647,7 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                 const LIBRARY_SELECTION_CACHE_KEY = "bestcf:selected-ip-library";
                 const SAVE_EASTER_SHAKE_DELAY_MS = 618;
                 const SAVE_EASTER_EXPORT_DELAY_MS = 1000;
+                const CANDIDATE_INPUT_ERROR_MESSAGE = "待选列表为空或格式不符合要求，请输入有效的 IP、CIDR 或 IP 区间，或导入 IP 库后再进行优选。";
 
                 const state = {
                     ipv4: null,
@@ -11242,8 +11276,10 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                     try {
                         candidates = prepareCandidates(els.ipInput.value, settings.limit, settings.port);
                     } catch (error) {
-                        els.latencyStatus.textContent = friendlyError(error);
+                        const message = friendlyError(error);
+                        els.latencyStatus.textContent = message;
                         els.latencyBtn.innerHTML = `${svgPulseIcon()}优选延迟`;
+                        showOptimizeToast(message);
                         return;
                     }
 
@@ -12003,6 +12039,25 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                     window.setTimeout(() => tip.remove(), 1500);
                 }
 
+                let optimizeToastTimer = 0;
+                function showOptimizeToast(message) {
+                    let toast = document.querySelector(".optimize-toast");
+                    if (!toast) {
+                        toast = document.createElement("div");
+                        toast.className = "optimize-toast";
+                        toast.setAttribute("role", "status");
+                        toast.setAttribute("aria-live", "polite");
+                        document.body.appendChild(toast);
+                    }
+
+                    toast.textContent = message;
+                    window.clearTimeout(optimizeToastTimer);
+                    requestAnimationFrame(() => toast.classList.add("is-visible"));
+                    optimizeToastTimer = window.setTimeout(() => {
+                        toast.classList.remove("is-visible");
+                    }, 3600);
+                }
+
                 function closeBestCFModule() {
                     if (window.parent && window.parent !== window) {
                         try {
@@ -12104,7 +12159,7 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                         .map(cleanInputLine)
                         .filter(Boolean);
 
-                    if (!lines.length) throw new Error("请先填写待优选IP列表");
+                    if (!lines.length) throw new Error(CANDIDATE_INPUT_ERROR_MESSAGE);
 
                     const fixed = [];
                     const cidrs = [];
@@ -12155,7 +12210,7 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                         }
                     }
 
-                    if (!candidates.length) throw new Error("没有可用的IP地址");
+                    if (!candidates.length) throw new Error(CANDIDATE_INPUT_ERROR_MESSAGE);
                     return candidates.slice(0, limit);
                 }
 
