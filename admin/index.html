@@ -10329,7 +10329,7 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                 }
 
                 .filterable-header {
-                    position: relative;
+                    position: sticky;
                 }
 
                 .filter-header-label {
@@ -11330,9 +11330,8 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                             </div>
                             <div class="result-actions">
                                 <div class="result-actions-group">
-                                    <button class="btn secondary" id="selectAllBtn" type="button">全选</button>
                                     <button class="btn secondary" id="invertSelectBtn" type="button">反选</button>
-                                    <button class="btn secondary" id="clearSelectBtn" type="button">取消选择</button>
+                                    <button class="btn secondary" id="clearSelectBtn" type="button">重置</button>
                                 </div>
                                 <div class="result-actions-group">
                                     <span class="tiny muted selection-status" id="selectionStatus">已选 0 个</span>
@@ -11483,7 +11482,6 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                     speedStatus: $("#speedStatus"),
                     speedAllBtn: $("#speedAllBtn"),
                     selectAllHeader: $("#selectAllHeader"),
-                    selectAllBtn: $("#selectAllBtn"),
                     invertSelectBtn: $("#invertSelectBtn"),
                     clearSelectBtn: $("#clearSelectBtn"),
                     saveSelectedBtn: $("#saveSelectedBtn"),
@@ -11591,9 +11589,8 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                             clearSelectedResults();
                         }
                     });
-                    els.selectAllBtn.addEventListener("click", selectAllResults);
                     els.invertSelectBtn.addEventListener("click", invertSelectedResults);
-                    els.clearSelectBtn.addEventListener("click", clearSelectedResults);
+                    els.clearSelectBtn.addEventListener("click", resetResultSelection);
                     els.saveSelectedBtn.addEventListener("pointerdown", startSaveSelectedLongPress);
                     els.saveSelectedBtn.addEventListener("pointerup", finishSaveSelectedLongPress);
                     els.saveSelectedBtn.addEventListener("pointercancel", finishSaveSelectedLongPress);
@@ -12497,9 +12494,8 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                     els.saveSelectedBtn.disabled = state.results.length === 0;
                     els.saveSelectedBtn.classList.toggle("is-save-locked", saveLocked);
                     els.saveSelectedBtn.setAttribute("aria-disabled", (state.results.length === 0 || saveLocked) ? "true" : "false");
-                    els.selectAllBtn.disabled = total === 0;
                     els.invertSelectBtn.disabled = total === 0;
-                    els.clearSelectBtn.disabled = selected === 0;
+                    els.clearSelectBtn.disabled = selected === 0 && !hasActiveResultFilters();
                     els.selectAllHeader.disabled = total === 0;
                     els.selectAllHeader.checked = total > 0 && visibleSelected === total;
                     els.selectAllHeader.indeterminate = visibleSelected > 0 && visibleSelected < total;
@@ -12629,6 +12625,12 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
 
                 function clearSelectedResults() {
                     state.selectedIds.clear();
+                    renderResults();
+                }
+
+                function resetResultSelection() {
+                    state.selectedIds.clear();
+                    resetResultFilters();
                     renderResults();
                 }
 
